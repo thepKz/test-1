@@ -88,6 +88,9 @@ if (skipBtn) {
 function showIframeContent() {
 	console.log("Chuyển sang iframe!");
 	
+	// Preload iframe2 images
+	preloadIframe2();
+	
 	// Ẩn tunnel canvas
 	if (canvasTunnel) {
 		canvasTunnel.style.display = "none";
@@ -96,12 +99,12 @@ function showIframeContent() {
 		tunnelContainer.style.display = "none";
 	}
 	
-	// Hiển thị iframe
+	// Hiển thị iframe container với scroll liên tục
 	const iframeContainer = document.getElementById("iframeContainer");
 	if (iframeContainer) {
-		iframeContainer.style.display = "flex";
+		iframeContainer.style.display = "block";
 		iframeContainer.style.opacity = "1";
-		console.log("Iframe đã hiển thị");
+		console.log("Iframe với scroll liên tục đã hiển thị");
 	} else {
 		console.error("IframeContainer không tồn tại!");
 	}
@@ -112,6 +115,29 @@ function showIframeContent() {
 	}
 	isAnimating = false;
 }
+
+// Preload images for iframe2
+const preloadIframe2 = () => {
+	const iframe2Images = [
+		'https://picsum.photos/id/41/800/800',
+		'https://picsum.photos/id/42/800/800',
+		'https://picsum.photos/id/33/800/800',
+		'https://picsum.photos/id/24/800/800',
+		'https://picsum.photos/id/25/800/800',
+		'https://picsum.photos/id/26/800/800',
+		'https://picsum.photos/id/27/800/800',
+		'https://picsum.photos/id/28/800/800',
+		'https://picsum.photos/id/29/800/800',
+		'https://picsum.photos/id/22/800/800'
+	];
+	
+	iframe2Images.forEach(imgSrc => {
+		const img = new Image();
+		img.src = imgSrc;
+	});
+	
+	console.log("Preloaded iframe2 images");
+};
 
 // Thêm phím tắt để skip (phím S)
 document.addEventListener("keydown", (e) => {
@@ -147,6 +173,17 @@ function skipToEnd() {
 	}
 }
 function startPortal() {
+	// Ẩn card từ từ (fade out)
+	if (card) {
+		card.style.transition = "opacity 1s ease-out";
+		card.style.opacity = "0";
+		setTimeout(() => {
+			if (card) {
+				card.style.display = "none";
+			}
+		}, 500);
+	}
+	
 	// Hide the background immediately
 	document.body.style.backgroundImage = "none";
 	document.body.style.backgroundColor = "#000000";
@@ -171,14 +208,6 @@ function startPortal() {
 	setTimeout(() => {
 		if (canvasTunnel) {
 			canvasTunnel.classList.add("active");
-		}
-		if (card) {
-			card.classList.add("zoomIn");
-			setTimeout(() => {
-				if (card) {
-					card.style.display = "none";
-				}
-			}, 2000);
 		}
 	}, 100);
 }
