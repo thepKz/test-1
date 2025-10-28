@@ -66,22 +66,56 @@ const card = document.getElementById("portalCard"),
 	tunnelContainer = document.getElementById("tunnelContainer"),
 	skipButton = document.getElementById("skipButton"),
 	skipBtn = document.getElementById("skipBtn");
-card.addEventListener("click", startPortal);
-button.addEventListener("click", (e) => {
-	e.stopPropagation();
-	startPortal();
-});
+if (card) {
+	card.addEventListener("click", startPortal);
+}
+if (button) {
+	button.addEventListener("click", (e) => {
+		e.stopPropagation();
+		startPortal();
+	});
+}
 
-skipBtn.addEventListener("click", (e) => {
-	e.preventDefault();
-	e.stopPropagation();
-	console.log("Skip button clicked!");
-	skipToEnd();
-});
+if (skipBtn) {
+	skipBtn.addEventListener("click", (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		console.log("Skip button clicked!");
+		skipToEnd();
+	});
+}
+
+function showIframeContent() {
+	console.log("Chuyển sang iframe!");
+	
+	// Ẩn tunnel canvas
+	if (canvasTunnel) {
+		canvasTunnel.style.display = "none";
+	}
+	if (tunnelContainer) {
+		tunnelContainer.style.display = "none";
+	}
+	
+	// Hiển thị iframe
+	const iframeContainer = document.getElementById("iframeContainer");
+	if (iframeContainer) {
+		iframeContainer.style.display = "flex";
+		iframeContainer.style.opacity = "1";
+		console.log("Iframe đã hiển thị");
+	} else {
+		console.error("IframeContainer không tồn tại!");
+	}
+	
+	// Dừng animation
+	if (renderFrameId) {
+		cancelAnimationFrame(renderFrameId);
+	}
+	isAnimating = false;
+}
 
 // Thêm phím tắt để skip (phím S)
 document.addEventListener("keydown", (e) => {
-	if (e.key.toLowerCase() === "s" && skipButton.style.display === "block") {
+	if (e.key.toLowerCase() === "s" && skipButton && skipButton.style.display === "block") {
 		console.log("Skip shortcut pressed!");
 		skipToEnd();
 	}
@@ -117,42 +151,47 @@ function startPortal() {
 	document.body.style.backgroundImage = "none";
 	document.body.style.backgroundColor = "#000000";
 
-	canvasTunnel.style.display = "block";
-	tunnelContainer.style.display = "flex";
+	if (canvasTunnel) {
+		canvasTunnel.style.display = "block";
+	}
+	if (tunnelContainer) {
+		tunnelContainer.style.display = "flex";
+	}
 	initTunnel();
 	render();
 	
 	// Hiển thị nút skip sau 2 giây
 	setTimeout(() => {
-		skipButton.style.display = "block";
-		skipButton.classList.add("show");
+		if (skipButton) {
+			skipButton.style.display = "block";
+			skipButton.classList.add("show");
+		}
 	}, 2000);
 	
 	setTimeout(() => {
-		canvasTunnel.classList.add("active");
-		card.classList.add("zoomIn");
-		setTimeout(() => {
-			card.style.display = "none";
-		}, 2000);
+		if (canvasTunnel) {
+			canvasTunnel.classList.add("active");
+		}
+		if (card) {
+			card.classList.add("zoomIn");
+			setTimeout(() => {
+				if (card) {
+					card.style.display = "none";
+				}
+			}, 2000);
+		}
 	}, 100);
 }
 function createCircularPath() {
 	const points = [];
-	// Rút ngắn đường hầm cho frame mở đầu - chỉ 50 điểm
-	const totalPoints = 50;
-	const controlPoints = [
-		new THREE.Vector3(0, 0, 0),
-		new THREE.Vector3(10, 5, -20),
-		new THREE.Vector3(15, -3, -40),
-		new THREE.Vector3(20, 8, -60),
-		new THREE.Vector3(15, -2, -80),
-		new THREE.Vector3(0, 0, -100)
-	];
-	const curve = new THREE.CatmullRomCurve3(controlPoints);
-	curve.tension = 0.1;
+	// Đường hầm thẳng - tạo points trên một đường thẳng
+	const totalPoints = 10;
+	const startPoint = new THREE.Vector3(0, 0, 0);
+	const endPoint = new THREE.Vector3(0, 0, -50);
+	
 	for (let i = 0; i < totalPoints; i++) {
-		const t = i / (totalPoints - 1),
-			point = curve.getPoint(t);
+		const t = i / (totalPoints - 1);
+		const point = new THREE.Vector3().lerpVectors(startPoint, endPoint, t);
 		points.push(point);
 	}
 	return points;
@@ -182,7 +221,7 @@ function returnToHome() {
 	function startPortalTransition() {
 		const zoomAnimation = {
 			progress: 0,
-			duration: 800,
+			duration: 500,
 			startTime: Date.now(),
 			startPosition: camera.position.clone(),
 			targetPosition: new THREE.Vector3(
@@ -240,9 +279,9 @@ let isAnimating = true,
 	hoverTime = 0;
 var w = window.innerWidth,
 	h = window.innerHeight;
-var cameraSpeed = 0.0003, // Tăng tốc độ cho frame mở đầu
+	var cameraSpeed = 0.003, // Tăng tốc độ nhanh hơn
 	lightSpeed = 0.002,
-	tubularSegments = 300,
+	tubularSegments = 50,
 	radialSegments = 12,
 	tubeRadius = 3;
 var renderer, scene, camera, tube;
@@ -354,8 +393,8 @@ function createBackOfPortalCard() {
 	ctx.textBaseline = "middle";
 	ctx.shadowColor = "rgba(0, 255, 170, 0.7)";
 	ctx.shadowBlur = 15;
-	ctx.fillText("KẾT THÚC", canvas.width / 2, canvas.height / 2 - 30);
-	ctx.fillText("CUỘC KHÁNG CHIẾN", canvas.width / 2, canvas.height / 2 + 30);
+	ctx.fillText("Bắt đầu", canvas.width / 2, canvas.height / 2 - 30);
+	ctx.fillText("Cuộc Phiêu Lưu", canvas.width / 2, canvas.height / 2 + 30);
 	ctx.shadowBlur = 0;
 
 	// Create a texture from the canvas
@@ -395,6 +434,10 @@ function createCodeSnippetSprite(text) {
 	return sprite;
 }
 function initTunnel() {
+	if (!canvasTunnel) {
+		console.error("canvasTunnel is null!");
+		return;
+	}
 	renderer = new THREE.WebGLRenderer({
 		canvas: canvasTunnel,
 		antialias: true,
@@ -422,12 +465,12 @@ function initTunnel() {
 			}
 		}
 	});
-	const starsCount = 2000;
+	const starsCount = 5000; // Tăng từ 2000 lên 5000
 	const starsPositions = new Float32Array(starsCount * 3);
 	for (let i = 0; i < starsCount; i++) {
-		starsPositions[i * 3] = THREE.MathUtils.randFloatSpread(1500);
-		starsPositions[i * 3 + 1] = THREE.MathUtils.randFloatSpread(1500);
-		starsPositions[i * 3 + 2] = THREE.MathUtils.randFloatSpread(1500);
+		starsPositions[i * 3] = THREE.MathUtils.randFloatSpread(2000); // Tăng phạm vi từ 1500 lên 2000
+		starsPositions[i * 3 + 1] = THREE.MathUtils.randFloatSpread(2000);
+		starsPositions[i * 3 + 2] = THREE.MathUtils.randFloatSpread(2000);
 	}
 	const starsGeometry = new THREE.BufferGeometry();
 	starsGeometry.setAttribute(
@@ -444,14 +487,25 @@ function initTunnel() {
 	const starField = new THREE.Points(starsGeometry, starsMaterial);
 	scene.add(starField);
 	const organicPoints = createCircularPath();
+	if (!organicPoints || organicPoints.length === 0) {
+		console.error("organicPoints is empty!");
+		return;
+	}
 	path = new THREE.CatmullRomCurve3(organicPoints);
 	const tubeGeometry = new THREE.TubeBufferGeometry(
 		path,
-		300, // Giảm từ 600 xuống 300 cho frame mở đầu
+		50, // Đường hầm ngắn
 		tubeRadius,
 		radialSegments,
 		false
 	);
+	
+	// Check if geometry has attributes
+	if (!tubeGeometry.attributes || !tubeGeometry.attributes.position) {
+		console.error("tubeGeometry.attributes.position is null!");
+		return;
+	}
+	
 	const colors = [];
 	for (let i = 0; i < tubeGeometry.attributes.position.count; i++) {
 		const color = new THREE.Color(i % 2 === 0 ? "#ffffff" : "#cccccc");
@@ -489,40 +543,6 @@ function initTunnel() {
 		scene.add(l);
 	}
 
-	// Thêm hình ảnh lịch sử từ Lorem Picsum
-	const historicalImages = [
-		"https://picsum.photos/400/300?grayscale&blur=1",
-		"https://picsum.photos/400/300?grayscale&blur=2",
-		"https://picsum.photos/400/300?grayscale&blur=1",
-		"https://picsum.photos/400/300?grayscale&blur=2"
-	];
-
-	// Tăng số hình ảnh lên 20 cho frame mở đầu
-	for (let i = 0; i < 20; i++) {
-		const imageUrl = historicalImages[i % historicalImages.length];
-		const loader = new THREE.TextureLoader();
-		loader.load(imageUrl, (texture) => {
-			const geometry = new THREE.PlaneGeometry(15, 10);
-			const material = new THREE.MeshBasicMaterial({
-				map: texture,
-				transparent: true,
-				opacity: 0.6,
-				side: THREE.DoubleSide
-			});
-			const imageMesh = new THREE.Mesh(geometry, material);
-			imageMesh.position.set(
-				(Math.random() - 0.5) * 150,
-				(Math.random() - 0.5) * 150,
-				(Math.random() - 0.5) * 150
-			);
-			imageMesh.rotation.set(
-				Math.random() * Math.PI,
-				Math.random() * Math.PI,
-				Math.random() * Math.PI
-			);
-			scene.add(imageMesh);
-		});
-	}
 
 	const snippetVarieties = [
 		// Sự kiện 1858-1862
@@ -710,27 +730,27 @@ function initTunnel() {
 		].join("\n")
 	];
 
-	// Giảm số snippets cho frame mở đầu
-	for (let i = 0; i < 20; i++) {
-		// Sử dụng snippet ngẫu nhiên từ danh sách lịch sử
-		let snippet =
-			snippetVarieties[Math.floor(Math.random() * snippetVarieties.length)];
-		let sprite = createCodeSnippetSprite(snippet);
-		sprite.position.set(
-			(Math.random() - 0.5) * 200,
-			(Math.random() - 0.5) * 200,
-			(Math.random() - 0.5) * 200
-		);
-		scene.add(sprite);
-	}
+	// Ẩn snippets (chữ) - không tạo snippets nữa
+	// for (let i = 0; i < 20; i++) {
+	// 	// Sử dụng snippet ngẫu nhiên từ danh sách lịch sử
+	// 	let snippet =
+	// 		snippetVarieties[Math.floor(Math.random() * snippetVarieties.length)];
+	// 	let sprite = createCodeSnippetSprite(snippet);
+	// 	sprite.position.set(
+	// 		(Math.random() - 0.5) * 200,
+	// 		(Math.random() - 0.5) * 200,
+	// 		(Math.random() - 0.5) * 200
+	// 	);
+	// 	scene.add(sprite);
+	// }
 
-	// Add more white/star particles
-	const additionalStars = 5000;
+	// Add more white/star particles - tăng số lượng ngôi sao
+	const additionalStars = 8000; // Tăng từ 5000 lên 8000
 	const additionalStarsPositions = new Float32Array(additionalStars * 3);
 	for (let i = 0; i < additionalStars; i++) {
-		additionalStarsPositions[i * 3] = THREE.MathUtils.randFloatSpread(2000);
-		additionalStarsPositions[i * 3 + 1] = THREE.MathUtils.randFloatSpread(2000);
-		additionalStarsPositions[i * 3 + 2] = THREE.MathUtils.randFloatSpread(2000);
+		additionalStarsPositions[i * 3] = THREE.MathUtils.randFloatSpread(2500); // Tăng phạm vi từ 2000 lên 2500
+		additionalStarsPositions[i * 3 + 1] = THREE.MathUtils.randFloatSpread(2500);
+		additionalStarsPositions[i * 3 + 2] = THREE.MathUtils.randFloatSpread(2500);
 	}
 	const additionalStarsGeometry = new THREE.BufferGeometry();
 	additionalStarsGeometry.setAttribute(
@@ -785,65 +805,43 @@ function createCircleTexture() {
 }
 
 function render() {
-	pct += cameraSpeed;
-	if (pct >= 0.995) {
-		pct = 0;
+	// Check if we reached the end of tunnel
+	if (pct >= 0.99) {
+		// Đến cuối đường hầm - chuyển sang iframe
+		if (!window.iframeLoaded) {
+			window.iframeLoaded = true;
+			showIframeContent();
+			return; // Stop rendering
+		}
+		return; // Don't continue
 	}
+
+	// Continue through tunnel
+	pct += cameraSpeed;
 	pct2 += lightSpeed;
 	if (pct2 >= 0.995) {
 		pct2 = 0;
 	}
-	const pt1 = path.getPointAt(pct),
-		lookAheadPct = Math.min(pct + 0.01, 0.995),
-		pt2 = path.getPointAt(lookAheadPct);
+	
+	const pt1 = path.getPointAt(pct);
+	const pt2 = path.getPointAt(Math.min(pct + 0.01, 1));
+
 	camera.position.set(pt1.x, pt1.y, pt1.z);
 	camera.lookAt(pt2);
+
+	// Move lights with camera
 	const mainLight = lights[0];
 	mainLight.position.set(pt2.x, pt2.y, pt2.z);
+
 	for (let i = 1; i < lights.length; i++) {
-		const offset = ((i * 13) % 17) / 20,
-			lightPct = (pct2 + offset) % 0.995,
-			pos = path.getPointAt(lightPct);
+		const offset = ((i * 13) % 17) / 20;
+		const lightPct = (pct2 + offset) % 0.995;
+		const pos = path.getPointAt(lightPct);
 		lights[i].position.set(pos.x, pos.y, pos.z);
 	}
+
 	renderer.render(scene, camera);
-	if (pct < 0.985) {
-		if (pct < 0.985) {
-			// Continue through tunnel
-			const pt1 = path.getPointAt(pct);
-			const pt2 = path.getPointAt(Math.min(pct + 0.01, 1));
-
-			camera.position.set(pt1.x, pt1.y, pt1.z);
-			camera.lookAt(pt2);
-
-			// Move lights with camera
-			const mainLight = lights[0];
-			mainLight.position.set(pt2.x, pt2.y, pt2.z);
-
-			for (let i = 1; i < lights.length; i++) {
-				const offset = ((i * 13) % 17) / 20;
-				const lightPct = (pct2 + offset) % 0.995;
-				const pos = path.getPointAt(lightPct);
-				lights[i].position.set(pos.x, pos.y, pos.z);
-			}
-
-			pct += cameraSpeed;
-			pct2 += lightSpeed;
-			renderFrameId = requestAnimationFrame(render);
-		} else {
-			// Float in place at the end of the tunnel
-			hoverTime += 0.02;
-			const hoverOffset = Math.sin(hoverTime) * 0.5;
-
-			const base = path.getPointAt(0.985);
-			const target = path.getPointAt(0.99);
-
-			camera.position.set(base.x, base.y + hoverOffset, base.z);
-			camera.lookAt(target);
-
-			renderFrameId = requestAnimationFrame(render);
-		}
-	}
+	renderFrameId = requestAnimationFrame(render);
 }
 function createCodeSnippetSprite(text) {
 	const canvas = document.createElement("canvas");

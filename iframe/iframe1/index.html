@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Tư Liệu Lịch Sử</title>
+</head>
+<body>
+    <div class="imgLoader"></div>
+
+<div class="container">
+
+  <h1 class="title">
+    Lịch sử<br>Kháng chiến chống Pháp<br>1858-1930
+  </h1>
+
+  <div class="credit">
+    * Tư liệu lịch sử kháng chiến
+  </div>
+
+  <div class="book">
+    <div class="gap"></div>
+    <div class="pages">
+      <div class="page"></div>
+      <div class="page"></div>
+      <div class="page"></div>
+      <div class="page"></div>
+      <div class="page"></div>
+      <div class="page"></div>
+    </div>
+    <div class="flips">
+      <div class="flip flip1">
+        <div class="flip flip2">
+          <div class="flip flip3">
+            <div class="flip flip4">
+              <div class="flip flip5">
+                <div class="flip flip6">
+                  <div class="flip flip7"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Preload all images before showing content
+  const images = [
+    'https://picsum.photos/420/300?random=1',
+    'https://picsum.photos/420/300?random=2',
+    'https://picsum.photos/420/300?random=3',
+    'https://picsum.photos/420/300?random=4',
+    'https://picsum.photos/420/300?random=5'
+  ];
+
+  let loadedCount = 0;
+  const totalImages = images.length;
+
+  function preloadImage(url) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve();
+      img.onerror = () => resolve(); // Continue even if image fails
+      img.src = url;
+    });
+  }
+
+  async function preloadAll() {
+    const promises = images.map(url => preloadImage(url));
+    await Promise.all(promises);
+    
+    // Hide loader and show content with fade-in
+    document.querySelector('.imgLoader').style.display = 'none';
+    const container = document.querySelector('.container');
+    container.style.animation = 'fadeIn 0.5s ease-in forwards';
+  }
+
+  // Start preloading when page loads
+  window.addEventListener('DOMContentLoaded', preloadAll);
+</script>
+
+</body>
+</html>
