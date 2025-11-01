@@ -96,18 +96,40 @@
   const pages = document.querySelectorAll('.page');
 
   // Khi click vào trang sách
-  pages.forEach(page => {
-    page.addEventListener('click', function() {
-      // Lấy background-image từ trang được click
-      const bgImage = window.getComputedStyle(this).backgroundImage;
-      // Trích xuất URL từ backgroundImage (format: url("../../img/mockup.jpg"))
-      const imageUrl = bgImage.match(/url\(["']?([^"']+)["']?\)/);
+  pages.forEach((page, index) => {
+    page.addEventListener('click', function(e) {
+      e.stopPropagation(); // Ngăn event bubble
       
-      if (imageUrl && imageUrl[1]) {
-        modal.style.display = 'block';
-        modalImg.src = imageUrl[1];
-        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+      // Sử dụng ảnh từ mảng images đã định nghĩa (ổn định hơn background-image đang animation)
+      let imageUrl = '../../img/mockup.jpg'; // Default
+      
+      if (images && images.length > 0) {
+        // Lấy ảnh từ mảng images (có thể dùng index nếu muốn nhiều ảnh khác nhau)
+        imageUrl = images[index % images.length];
+      } else {
+        // Fallback: thử lấy từ background-image
+        try {
+          const bgImage = window.getComputedStyle(this).backgroundImage;
+          const urlMatch = bgImage.match(/url\(["']?([^"']+)["']?\)/);
+          if (urlMatch && urlMatch[1]) {
+            imageUrl = urlMatch[1];
+          }
+        } catch (err) {
+          console.log('Error getting background image:', err);
+        }
       }
+      
+      // Hiển thị modal với ảnh
+      modal.style.display = 'block';
+      modalImg.src = imageUrl;
+      
+      // Đảm bảo ảnh hiển thị
+      modalImg.onerror = function() {
+        console.log('Error loading image:', imageUrl);
+        modalImg.src = '../../img/mockup.jpg'; // Fallback
+      };
+      
+      document.body.style.overflow = 'hidden'; // Prevent background scrolling
     });
   });
 
