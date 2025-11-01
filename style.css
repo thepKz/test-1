@@ -18,9 +18,6 @@
 }
 body {
 	overflow: hidden;
-	background: url("https://picsum.photos/1920/1080?grayscale&blur=1")
-		no-repeat center center fixed;
-	background-size: cover;
 	background-color: #1a1a1a;
 	font-family: "Unica One", sans-serif;
 	display: flex;
@@ -51,6 +48,7 @@ body {
 	transform-style: preserve-3d;
 	position: relative;
 	transform: scale(0.85);
+	pointer-events: auto;
 }
 #portalCard::before {
 	content: "";
