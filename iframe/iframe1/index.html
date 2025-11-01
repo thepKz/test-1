@@ -48,6 +48,11 @@
   </div>
 </div>
 
+<!-- Modal để hiển thị ảnh khi click -->
+<div id="imageModal" class="modal">
+  <span class="close">&times;</span>
+  <img class="modal-content" id="modalImage">
+</div>
 
 <script>
   // Preload all images before showing content
@@ -83,6 +88,50 @@
 
   // Start preloading when page loads
   window.addEventListener('DOMContentLoaded', preloadAll);
+
+  // Modal để hiển thị ảnh khi click
+  const modal = document.getElementById('imageModal');
+  const modalImg = document.getElementById('modalImage');
+  const closeBtn = document.querySelector('.close');
+  const pages = document.querySelectorAll('.page');
+
+  // Khi click vào trang sách
+  pages.forEach(page => {
+    page.addEventListener('click', function() {
+      // Lấy background-image từ trang được click
+      const bgImage = window.getComputedStyle(this).backgroundImage;
+      // Trích xuất URL từ backgroundImage (format: url("../../img/mockup.jpg"))
+      const imageUrl = bgImage.match(/url\(["']?([^"']+)["']?\)/);
+      
+      if (imageUrl && imageUrl[1]) {
+        modal.style.display = 'block';
+        modalImg.src = imageUrl[1];
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+      }
+    });
+  });
+
+  // Đóng modal khi click vào X
+  closeBtn.addEventListener('click', function() {
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+  });
+
+  // Đóng modal khi click bên ngoài ảnh
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
+      modal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+  });
+
+  // Đóng modal bằng phím ESC
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal.style.display === 'block') {
+      modal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+  });
 </script>
 
 </body>
