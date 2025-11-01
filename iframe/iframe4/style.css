@@ -147,7 +147,7 @@ table {
 
 .path1 {
     stroke-dasharray: 6884;
-    animation: drawPath1 1s linear, floating 2.2s linear infinite;
+    animation: drawPath1 6s linear, floating 3.2s linear infinite;
 }
 
 .content1 {
