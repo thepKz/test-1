@@ -132,7 +132,9 @@ table {
 }
 .header {
     padding-top: 110px;
-    background-color: #000;
+    background: linear-gradient(rgba(0, 0, 0, 0.474), rgba(0, 0, 0, 0.3)), url("../../img/background-1.jpg");
+    background-size: cover;
+    background-position: center;
     box-sizing: border-box;
     overflow: hidden;
 }
@@ -229,4 +231,23 @@ table {
         -webkit-transform: translate3d(-50%, 0, 0);
         transform: translate3d(-50%, 0, 0);
     }
+}
+
+
+
+#iframe1,
+#iframe2 {
+    overflow-y: hidden !important;
+    /* Hide vertical scroll */
+    scrollbar-width: none;       /* Firefox */
+    -ms-overflow-style: none;    /* Internet Explorer 10+ */
+}
+
+#iframe1::-webkit-scrollbar,
+#iframe2::-webkit-scrollbar {
+    display: none;               /* Safari and Chrome */
+}
+
+html{
+    overflow-x: hidden;
 }

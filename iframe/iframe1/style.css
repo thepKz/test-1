@@ -12,6 +12,9 @@ body {
   color: #fff;
   text-align: center;
   padding: 4em 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
 }
 
 /* Modal styles */
@@ -103,6 +106,8 @@ body {
   height: 430px;
   opacity: 0;
   animation: fadeIn 0.5s ease-in forwards;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 @keyframes fadeIn {
@@ -136,6 +141,7 @@ body {
   perspective-origin: center 50px;
   transform: scale(1.2);
   filter: drop-shadow(0px 10px 5px rgba(0, 0, 0, 0.25));
+  transform-origin: center center;
 }
 
 .page {
@@ -692,4 +698,68 @@ body {
 }
 .twitterLink img:hover {
   filter: grayscale(0%);
+}
+
+
+/* Responsive cho container và book - Đặt cuối để override */
+@media screen and (max-width: 768px) {
+  .container {
+    width: 90% !important;
+    max-width: 350px !important;
+    height: auto !important;
+    min-height: 350px !important;
+    padding: 0 !important;
+  }
+  
+  .book {
+    transform: scale(0.95) !important;
+    transform-origin: center center !important;
+    perspective: 550px !important;
+    perspective-origin: center center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-top: 60px;
+  }
+  
+  body {
+    padding: 2em 0 !important;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .container {
+    width: 80% !important;
+    max-width: 300px !important;
+    min-height: 280px !important;
+    padding: 0 !important;
+  }
+  
+  .book {
+    transform: scale(0.8) !important;
+    transform-origin: center center !important;
+    perspective: 550px !important;
+    perspective-origin: center center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-top: 30px;
+  }
+  
+  .title {
+    font-size: 1.5em !important;
+    top: 10px !important;
+  }
+  
+  body {
+    padding: 1em 0 !important;
+  }
+  
+  /* Scale các page và flip elements */
+  .page {
+    transform-origin: 100% 100% !important;
+  }
+  
+  /* Điều chỉnh gap và các elements khác */
+  .gap {
+    transform: rotateX(60deg) scale(1) !important;
+  }
 }
