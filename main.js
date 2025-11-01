@@ -86,27 +86,16 @@ if (skipBtn) {
 }
 
 function showIframeContent() {
-	console.log("Chuyển sang iframe!");
+	console.log("Tự động chuyển sang iframe4!");
 	
-	// Preload iframe2 images
-	preloadIframe2();
-	
-	// Ẩn tunnel canvas
+	// Ẩn tunnel canvas với fade out
 	if (canvasTunnel) {
-		canvasTunnel.style.display = "none";
+		canvasTunnel.style.transition = "opacity 0.5s ease-out";
+		canvasTunnel.style.opacity = "0";
 	}
 	if (tunnelContainer) {
-		tunnelContainer.style.display = "none";
-	}
-	
-	// Hiển thị iframe container với scroll liên tục
-	const iframeContainer = document.getElementById("iframeContainer");
-	if (iframeContainer) {
-		iframeContainer.style.display = "block";
-		iframeContainer.style.opacity = "1";
-		console.log("Iframe với scroll liên tục đã hiển thị");
-	} else {
-		console.error("IframeContainer không tồn tại!");
+		tunnelContainer.style.transition = "opacity 0.5s ease-out";
+		tunnelContainer.style.opacity = "0";
 	}
 	
 	// Dừng animation
@@ -114,21 +103,26 @@ function showIframeContent() {
 		cancelAnimationFrame(renderFrameId);
 	}
 	isAnimating = false;
+	
+	// Chuyển hướng đến iframe4 sau khi fade out hoàn tất
+	setTimeout(() => {
+		window.location.href = "iframe/iframe4/index.html";
+	}, 500);
 }
 
 // Preload images for iframe2
 const preloadIframe2 = () => {
 	const iframe2Images = [
-		'https://picsum.photos/id/41/800/800',
-		'https://picsum.photos/id/42/800/800',
-		'https://picsum.photos/id/33/800/800',
-		'https://picsum.photos/id/24/800/800',
-		'https://picsum.photos/id/25/800/800',
-		'https://picsum.photos/id/26/800/800',
-		'https://picsum.photos/id/27/800/800',
-		'https://picsum.photos/id/28/800/800',
-		'https://picsum.photos/id/29/800/800',
-		'https://picsum.photos/id/22/800/800'
+		'img/mockup.jpg',
+		'img/mockup.jpg',
+		'img/mockup.jpg',
+		'img/mockup.jpg',
+		'img/mockup.jpg',
+		'img/mockup.jpg',
+		'img/mockup.jpg',
+		'img/mockup.jpg',
+		'img/mockup.jpg',
+		'img/mockup.jpg'
 	];
 	
 	iframe2Images.forEach(imgSrc => {
@@ -160,7 +154,9 @@ function skipToEnd() {
 	}
 	
 	// Ẩn nút skip
-	skipButton.style.display = "none";
+	if (skipButton) {
+		skipButton.style.display = "none";
+	}
 	
 	// Dừng animation hiện tại và nhảy đến cuối
 	if (renderFrameId) {
@@ -171,6 +167,9 @@ function skipToEnd() {
 	if (renderer && scene && camera) {
 		renderer.render(scene, camera);
 	}
+	
+	// Chuyển ngay sang iframe4
+	showIframeContent();
 }
 function startPortal() {
 	// Ẩn card từ từ (fade out)
@@ -836,7 +835,7 @@ function createCircleTexture() {
 function render() {
 	// Check if we reached the end of tunnel
 	if (pct >= 0.99) {
-		// Đến cuối đường hầm - chuyển sang iframe
+		// Đến cuối đường hầm - tự động chuyển sang iframe4
 		if (!window.iframeLoaded) {
 			window.iframeLoaded = true;
 			showIframeContent();

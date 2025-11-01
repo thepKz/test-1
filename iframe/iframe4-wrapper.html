@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iframe4 Wrapper</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        #iframe4Wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- iframe trung gian load iframe4 -->
+    <iframe id="iframe4Wrapper" src="iframe4/index.html"></iframe>
+    
+    <script>
+        // Forward scroll messages từ parent xuống iframe4
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'scroll') {
+                const iframe4 = document.getElementById('iframe4Wrapper');
+                if (iframe4 && iframe4.contentWindow) {
+                    try {
+                        iframe4.contentWindow.postMessage(event.data, '*');
+                    } catch(e) {
+                        console.error('Error forwarding scroll message:', e);
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

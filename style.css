@@ -26,12 +26,12 @@ body {
 	height: 100vh;
 	position: relative;
 	perspective: 2000px;
-	filter: sepia(0.3) contrast(1.2);
+	filter: grayscale(100%);
 }
 #portalCard {
 	position: absolute;
-	width: 320px;
-	height: 400px;
+	width: 420px;
+	height: 500px;
 	background: rgba(20, 20, 20, 0.8);
 	backdrop-filter: blur(10px);
 	border-radius: 20px;
@@ -186,7 +186,7 @@ body {
 
 .subtitle {
 	color: #cccccc;
-	font-size: 14px;
+	font-size: 25px;
 	font-weight: 300;
 	letter-spacing: 1px;
 	margin-bottom: 25px;
@@ -194,6 +194,7 @@ body {
 	text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 	z-index: 5;
 	position: relative;
+	font-family: "Dancing Script", "Inter", "Roboto", "Noto Sans", sans-serif;
 }
 #portalButton {
 	padding: 16px 38px;
@@ -257,6 +258,10 @@ body {
 	align-items: center;
 	justify-content: center;
 	z-index: 5;
+}
+#portalContent h1 {
+	font-size: 50px;
+	
 }
 #tunnelContainer {
 	position: absolute;

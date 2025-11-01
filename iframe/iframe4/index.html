@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <title>Document</title>
+    <title>Magic Library</title>
 </head>
 
 <body>
@@ -36,6 +36,13 @@
         </svg>
     </div>
     <div class="footer"></div>
+
+    <!-- iframe1 và iframe2 được thêm vào iframe4 để dễ quản lý -->
+    <!-- iframe1 ở trên, bên phải -->
+    <iframe id="iframe1" src="../iframe1/index.html" style="position: absolute; top: 10%; right: 10%; width: 50vw; height: 100vh; border: none; z-index: 100; pointer-events: auto;"></iframe>
+    
+    <!-- iframe2 ở dưới iframe1, ở giữa -->
+    <iframe id="iframe2" src="../iframe2/index.html" style="position: absolute; top: 100vh; left: 50%; transform: translateX(-50%); width: 80vw; height: 100vh; border: none; z-index: 100; pointer-events: auto;"></iframe>
 
     <!-- a tag for my tutorial channel link -->
     <!-- <a id='tube' href='https://www.youtube.com/channel/UCyIn03aZJHoBIddySz9NKOA' target='_blank'>
