@@ -151,6 +151,9 @@ function showIframeContent() {
 				canvasTunnel.style.display = "none";
 			}
 			
+			// Loại bỏ filter grayscale khỏi body để khôi phục màu sắc cho iframe4
+			document.body.style.filter = "none";
+			
 			// Hiển thị iframeContainer
 			iframeContainer.style.display = "block";
 			
