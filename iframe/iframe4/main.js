@@ -38,6 +38,3 @@ window.iframe4Cleanup = function() {
   window.removeEventListener('scroll', scrollHandler)
 }
 
-// iframe2 giờ sử dụng position: fixed với vh/vw units
-// nên không cần JavaScript để tính toán position nữa
-// CSS sẽ tự động scale theo viewport khi zoom, giống như SVG với viewBox

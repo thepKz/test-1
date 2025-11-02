@@ -94,7 +94,23 @@ document.addEventListener('DOMContentLoaded', function() {
             // Set context
             const contextDiv = galleryModal.querySelector('#galleryContext');
             contextDiv.innerHTML = data.content;
-            contextDiv.scrollTop = 0;
+            // Scroll to top - use requestAnimationFrame for smooth scroll
+            requestAnimationFrame(() => {
+                contextDiv.scrollTop = 0;
+                // Also scroll parent container if it's scrollable
+                const scrollContainer = galleryModal.querySelector('.gallery-context');
+                if (scrollContainer) {
+                    scrollContainer.scrollTop = 0;
+                }
+            });
+            
+            // Initialize timeline for all content sections
+            setTimeout(function() {
+                if (typeof jQuery !== 'undefined') {
+                    const timelineId = `timeline-${index + 1}`;
+                    $(`#${timelineId}`).timeline();
+                }
+            }, 200);
             
             // Update active sidebar image
             const sidebarImages = galleryModal.querySelectorAll('.gallery-sidebar-image');
@@ -153,7 +169,23 @@ document.addEventListener('DOMContentLoaded', function() {
         // Set context
         const contextDiv = galleryModal.querySelector('#galleryContext');
         contextDiv.innerHTML = data.content;
-        contextDiv.scrollTop = 0;
+        // Scroll to top - use requestAnimationFrame for smooth scroll
+        requestAnimationFrame(() => {
+            contextDiv.scrollTop = 0;
+            // Also scroll parent container if it's scrollable
+            const scrollContainer = galleryModal.querySelector('.gallery-context');
+            if (scrollContainer) {
+                scrollContainer.scrollTop = 0;
+            }
+        });
+        
+        // Initialize timeline for all content sections
+        setTimeout(function() {
+            if (typeof jQuery !== 'undefined') {
+                const timelineId = `timeline-${index + 1}`;
+                $(`#${timelineId}`).timeline();
+            }
+        }, 500); // Longer delay for initial opening animation
         
         // Update active sidebar image
         const sidebarImages = galleryModal.querySelectorAll('.gallery-sidebar-image');
@@ -177,7 +209,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Initial state - positioned at clicked item (relative to viewport center)
         galleryLayoutEl.style.transform = `translate(${translateX}px, ${translateY}px) scale(${initialScale})`;
         galleryLayoutEl.style.opacity = '0';
-        // Overlay is always visible and clickable (transparent background)
+        // Overlay initial state
+        overlay.style.opacity = '0';
+        overlay.style.background = 'transparent';
         
         // Force reflow to ensure initial state is applied
         void galleryLayoutEl.offsetHeight;
@@ -185,9 +219,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // Animate to final position - use setTimeout to ensure initial state is rendered
         setTimeout(() => {
             galleryLayoutEl.style.transition = 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease';
+            overlay.style.transition = 'opacity 0.3s ease, background 0.3s ease';
+            overlay.style.opacity = '1';
             galleryLayoutEl.style.transform = 'translate(0, 0) scale(1)';
             galleryLayoutEl.style.opacity = '1';
-            // Overlay stays visible for click detection
         }, 10);
         
         // Scroll active image into view after animation
@@ -220,9 +255,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Animate back to item position
         galleryLayout.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease';
+        overlay.style.transition = 'opacity 0.3s ease, background 0.3s ease';
+        overlay.style.opacity = '0';
+        overlay.style.background = 'transparent';
         galleryLayout.style.transform = `translate(${translateX}px, ${translateY}px) scale(${finalScale})`;
         galleryLayout.style.opacity = '0';
-        // Overlay stays visible for click detection
         
         // Remove modal after animation
         setTimeout(() => {
@@ -258,22 +295,49 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     galleryCloseBtn.addEventListener('click', closeBtnHandler);
     
-    // Close on overlay click (background đen)
+    // Close on overlay click (background đen) - improved click-outside detection
     const overlay = galleryModal.querySelector('.gallery-overlay');
-    const overlayClickHandler = function(e) {
-        e.stopPropagation();
-        closeGallery();
+    const galleryLayout = galleryModal.querySelector('.gallery-layout');
+    
+    // Click-outside detection - close when clicking on overlay or outside gallery content
+    const modalClickHandler = function(e) {
+        // Check if click is on overlay or outside gallery-layout
+        if (galleryModal.classList.contains('active')) {
+            const clickedElement = e.target;
+            const isClickOnOverlay = clickedElement === overlay;
+            const isClickOutsideGallery = galleryLayout && !galleryLayout.contains(clickedElement);
+            const isClickOnCloseBtn = clickedElement === galleryCloseBtn || galleryCloseBtn.contains(clickedElement);
+            
+            // Close if clicking on overlay or outside gallery content (but not on close button itself - handled separately)
+            if ((isClickOnOverlay || isClickOutsideGallery) && !isClickOnCloseBtn) {
+                e.stopPropagation();
+                closeGallery();
+            }
+        }
     };
-    overlay.addEventListener('click', overlayClickHandler);
+    
+    // Use both click and mousedown for better cross-browser support
+    galleryModal.addEventListener('click', modalClickHandler);
+    galleryModal.addEventListener('mousedown', function(e) {
+        if (galleryModal.classList.contains('active')) {
+            const clickedElement = e.target;
+            if (clickedElement === overlay || (galleryLayout && !galleryLayout.contains(clickedElement))) {
+                e.preventDefault(); // Prevent any default behavior
+            }
+        }
+    });
     
     // Prevent closing when clicking inside gallery content
-    const galleryLayout = galleryModal.querySelector('.gallery-layout');
-    const galleryLayoutClickHandler = function(e) {
-        e.stopPropagation();
-    };
+    let galleryLayoutClickHandler = null;
     if (galleryLayout) {
+        galleryLayoutClickHandler = function(e) {
+            e.stopPropagation();
+        };
         galleryLayout.addEventListener('click', galleryLayoutClickHandler);
     }
+    
+    // Store overlay click handler for cleanup (keeping for backward compatibility)
+    const overlayClickHandler = modalClickHandler;
     
     // Keyboard navigation
     const keydownHandler = function(e) {
@@ -305,6 +369,89 @@ document.addEventListener('DOMContentLoaded', function() {
     
     observer.observe(galleryModal, { attributes: true, attributeFilter: ['class'] });
     
+    // Timeline function
+    (function ($) {
+        var timelineScrollHandler = null;
+        
+        $.fn.timeline = function () {
+            var selectors = {
+                id: $(this),
+                item: $(this).find(".timeline-item"),
+                activeClass: "timeline-item--active",
+                img: ".timeline__img"
+            };
+            
+            if (selectors.item.length === 0) return;
+            
+            // Use the gallery context scroll container instead of window
+            var scrollContainer = galleryModal.querySelector('.gallery-context');
+            if (!scrollContainer) return;
+            
+            var $scrollContainer = $(scrollContainer);
+            
+            // Remove previous scroll handler if exists
+            if (timelineScrollHandler) {
+                $scrollContainer.off('scroll', timelineScrollHandler);
+            }
+            
+            selectors.item.eq(0).addClass(selectors.activeClass);
+            
+            var imgSrc = selectors.item.first().find(selectors.img).attr("src");
+            if (imgSrc) {
+                selectors.id.css(
+                    "background-image",
+                    "url(" + imgSrc + ")"
+                );
+            }
+            
+            var itemLength = selectors.item.length;
+            
+            // Initial calculation function
+            function updateTimeline() {
+                var max, min;
+                var pos = $scrollContainer.scrollTop();
+                
+                selectors.item.each(function (i) {
+                    var $item = $(this);
+                    // Calculate relative position within the scroll container
+                    min = $item.position().top;
+                    max = min + $item.outerHeight();
+                    
+                    if (i == itemLength - 2 && pos > min + $item.outerHeight() / 2) {
+                        selectors.item.removeClass(selectors.activeClass);
+                        var lastImgSrc = selectors.item.last().find(selectors.img).attr("src");
+                        if (lastImgSrc) {
+                            selectors.id.css(
+                                "background-image",
+                                "url(" + lastImgSrc + ")"
+                            );
+                        }
+                        selectors.item.last().addClass(selectors.activeClass);
+                    } else if (pos <= max - 40 && pos >= min) {
+                        var currentImgSrc = $item.find(selectors.img).attr("src");
+                        if (currentImgSrc) {
+                            selectors.id.css(
+                                "background-image",
+                                "url(" + currentImgSrc + ")"
+                            );
+                        }
+                        selectors.item.removeClass(selectors.activeClass);
+                        $item.addClass(selectors.activeClass);
+                    }
+                });
+            }
+            
+            // Store handler for cleanup
+            timelineScrollHandler = updateTimeline;
+            
+            // Run on scroll
+            $scrollContainer.on('scroll', updateTimeline);
+            
+            // Run once to set initial state
+            setTimeout(updateTimeline, 100);
+        };
+    })(jQuery);
+    
     // Cleanup function
     window.iframe2Cleanup = function() {
         // Disconnect observer
@@ -324,8 +471,8 @@ document.addEventListener('DOMContentLoaded', function() {
             galleryCloseBtn.removeEventListener('click', closeBtnHandler);
         }
         
-        if (overlay && overlayClickHandler) {
-            overlay.removeEventListener('click', overlayClickHandler);
+        if (galleryModal && modalClickHandler) {
+            galleryModal.removeEventListener('click', modalClickHandler);
         }
         
         if (galleryLayout && galleryLayoutClickHandler) {
@@ -338,47 +485,3 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 });
-
-(function ($) {
-    $.fn.timeline = function () {
-      var selectors = {
-        id: $(this),
-        item: $(this).find(".timeline-item"),
-        activeClass: "timeline-item--active",
-        img: ".timeline__img"
-      };
-      selectors.item.eq(0).addClass(selectors.activeClass);
-      selectors.id.css(
-        "background-image",
-        "url(" + selectors.item.first().find(selectors.img).attr("src") + ")"
-      );
-      var itemLength = selectors.item.length;
-      $(window).scroll(function () {
-        var max, min;
-        var pos = $(this).scrollTop();
-        selectors.item.each(function (i) {
-          min = $(this).offset().top;
-          max = $(this).height() + $(this).offset().top;
-          var that = $(this);
-          if (i == itemLength - 2 && pos > min + $(this).height() / 2) {
-            selectors.item.removeClass(selectors.activeClass);
-            selectors.id.css(
-              "background-image",
-              "url(" + selectors.item.last().find(selectors.img).attr("src") + ")"
-            );
-            selectors.item.last().addClass(selectors.activeClass);
-          } else if (pos <= max - 40 && pos >= min) {
-            selectors.id.css(
-              "background-image",
-              "url(" + $(this).find(selectors.img).attr("src") + ")"
-            );
-            selectors.item.removeClass(selectors.activeClass);
-            $(this).addClass(selectors.activeClass);
-          }
-        });
-      });
-    };
-  })(jQuery);
-  
-  $("#timeline-1").timeline();
-  
