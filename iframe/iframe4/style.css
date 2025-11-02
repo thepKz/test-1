@@ -132,11 +132,31 @@ table {
 }
 .header {
     padding-top: 110px;
-    background: linear-gradient(rgba(0, 0, 0, 0.474), rgba(0, 0, 0, 0.3)), url("../../img/background-1.jpg");
+    background: 
+        linear-gradient(to bottom, 
+            rgba(0, 0, 0, 0.474) 0%, 
+            rgba(0, 0, 0, 0.3) 70%, 
+            transparent 100%),
+        url("../../img/background-1.jpg");
     background-size: cover;
     background-position: center;
     box-sizing: border-box;
     overflow: hidden;
+    position: relative;
+}
+
+.header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 150px;
+    background: linear-gradient(to bottom, 
+        transparent 0%, 
+        rgba(241, 241, 241, 0.3) 50%, 
+        rgba(241, 241, 241, 0.6) 100%);
+    pointer-events: none;
 }
 
 .path {
@@ -151,7 +171,34 @@ table {
 }
 
 .content1 {
+    background: 
+        linear-gradient(to bottom, 
+            rgba(241, 241, 241, 0.8) 0%, 
+            rgba(241, 241, 241, 0.4) 5%, 
+            rgba(0,0,0,0.35) 10%, 
+            rgba(0,0,0,0.07) 30%, 
+            rgba(0,0,0,0) 60%),
+        url("../../img/background-2.png");
     background-color: #f1f1f1;
+    background-size: cover;
+    background-position: center;
+    box-sizing: border-box;
+    overflow: hidden;
+    position: relative;
+}
+
+.content1::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 150px;
+    background: linear-gradient(to bottom, 
+        rgba(0, 0, 0, 0.2) 0%, 
+        transparent 100%);
+    pointer-events: none;
+    z-index: 1;
 }
 
 .content2 {
