@@ -763,3 +763,85 @@ body {
     transform: rotateX(60deg) scale(1) !important;
   }
 }
+
+
+@media screen and (max-width: 380px) {
+  .container {
+    width: 70% !important;
+    max-width: 200px !important;
+    min-height: 170px !important;
+    padding: 0 !important;
+  }
+  
+  .book {
+    transform: scale(0.46) !important;
+    transform-origin: center center !important;
+    perspective: 500px !important;
+    perspective-origin: center center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-top: 30px;
+  }
+  
+  .title {
+    font-size: 1.1em !important;
+    top: 10px !important;
+  }
+  
+  body {
+    padding: 1em 0 !important;
+  }
+  
+  /* Scale các page và flip elements */
+  .page {
+    transform-origin: 100% 100% !important;
+  }
+  
+  /* Điều chỉnh gap và các elements khác */
+  .gap {
+    transform: rotateX(60deg) scale(1) !important;
+  }
+}
+
+@media screen and (max-width: 250px) {
+  .container {
+    width: 60% !important;
+    max-width: 160px !important;
+    min-height: 140px !important;
+    padding: 0 !important;
+    cursor: none;
+  }
+  
+  .book {
+    transform: scale(0.35) !important;
+    transform-origin: center center !important;
+    perspective: 500px !important;
+    perspective-origin: center center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-top: 30px;
+    cursor: none;
+  }
+  
+  .title {
+    font-size: 0.8em !important;
+    top: 10px !important;
+  }
+  
+  body {
+    padding: 1em 0 !important;
+  }
+  
+  /* Scale các page và flip elements */
+  .page {
+    transform-origin: 100% 100% !important;
+  }
+  
+  /* Điều chỉnh gap và các elements khác */
+  .gap {
+    transform: rotateX(60deg) scale(1) !important;
+  }
+  .credit{
+    font-size: 0.6em;
+  }
+}

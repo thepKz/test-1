@@ -6,7 +6,13 @@
 		canvas.height = canvas.parentElement.offsetHeight;
 	}
 	resize();
-	window.addEventListener("resize", resize);
+	const resizeHandler = resize;
+	window.addEventListener("resize", resizeHandler);
+	
+	// Cleanup function
+	window.cardBgCleanup = function() {
+		window.removeEventListener("resize", resizeHandler);
+	};
 	const particles = [],
 		particleCount = 50;
 	for (let i = 0; i < particleCount; i++) {
@@ -21,8 +27,9 @@
 			)}, 0.7)`
 		});
 	}
+	let cardBgAnimationId = null;
 	function animate() {
-		requestAnimationFrame(animate);
+		cardBgAnimationId = requestAnimationFrame(animate);
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		for (let i = 0; i < particleCount; i++) {
 			const p = particles[i];
@@ -59,6 +66,18 @@
 		}
 	}
 	animate();
+	
+	// Update cleanup to include animation
+	if (window.cardBgCleanup) {
+		const oldCleanup = window.cardBgCleanup;
+		window.cardBgCleanup = function() {
+			oldCleanup();
+			if (cardBgAnimationId !== null) {
+				cancelAnimationFrame(cardBgAnimationId);
+				cardBgAnimationId = null;
+			}
+		};
+	}
 })();
 const card = document.getElementById("portalCard"),
 	button = document.getElementById("portalButton"),
@@ -66,27 +85,40 @@ const card = document.getElementById("portalCard"),
 	tunnelContainer = document.getElementById("tunnelContainer"),
 	skipButton = document.getElementById("skipButton"),
 	skipBtn = document.getElementById("skipBtn");
+
+// Store event listeners for cleanup
+const eventListeners = [];
+
 if (card) {
-	card.addEventListener("click", startPortal);
+	const cardClickHandler = startPortal;
+	card.addEventListener("click", cardClickHandler);
+	eventListeners.push({ element: card, event: "click", handler: cardClickHandler });
 }
 if (button) {
-	button.addEventListener("click", (e) => {
+	const buttonClickHandler = (e) => {
 		e.stopPropagation();
 		startPortal();
-	});
+	};
+	button.addEventListener("click", buttonClickHandler);
+	eventListeners.push({ element: button, event: "click", handler: buttonClickHandler });
 }
 
 if (skipBtn) {
-	skipBtn.addEventListener("click", (e) => {
+	const skipBtnClickHandler = (e) => {
 		e.preventDefault();
 		e.stopPropagation();
 		console.log("Skip button clicked!");
 		skipToEnd();
-	});
+	};
+	skipBtn.addEventListener("click", skipBtnClickHandler);
+	eventListeners.push({ element: skipBtn, event: "click", handler: skipBtnClickHandler });
 }
 
 function showIframeContent() {
 	console.log("Tự động chuyển sang iframe4!");
+	
+	// Cleanup trước khi chuyển
+	cleanupAll();
 	
 	// Ẩn tunnel canvas với fade out
 	if (canvasTunnel) {
@@ -101,12 +133,49 @@ function showIframeContent() {
 	// Dừng animation
 	if (renderFrameId) {
 		cancelAnimationFrame(renderFrameId);
+		renderFrameId = null;
 	}
 	isAnimating = false;
 	
-	// Chuyển hướng đến iframe4 sau khi fade out hoàn tất
+	// Hiển thị iframeContainer với transition smooth (không reload trang)
 	setTimeout(() => {
-		window.location.href = "iframe/iframe4/index.html";
+		const iframeContainer = document.getElementById('iframeContainer');
+		const iframe4 = document.getElementById('iframe4Background');
+		
+		if (iframeContainer && iframe4) {
+			// Ẩn tunnel container hoàn toàn
+			if (tunnelContainer) {
+				tunnelContainer.style.display = "none";
+			}
+			if (canvasTunnel) {
+				canvasTunnel.style.display = "none";
+			}
+			
+			// Hiển thị iframeContainer
+			iframeContainer.style.display = "block";
+			
+			// Hiển thị iframe4
+			iframe4.style.visibility = "visible";
+			
+			// Fade in iframeContainer
+			requestAnimationFrame(() => {
+				iframeContainer.style.opacity = "0";
+				setTimeout(() => {
+					iframeContainer.style.opacity = "1";
+				}, 10);
+			});
+			
+			// Đảm bảo iframe4 đã load (có thể đã được preload)
+			if (iframe4.contentWindow && iframe4.contentWindow.document.readyState === 'complete') {
+				console.log("iframe4 đã sẵn sàng!");
+			} else {
+				// Đợi iframe load xong
+				iframe4.onload = function() {
+					console.log("iframe4 đã load xong!");
+					iframe4.style.visibility = "visible";
+				};
+			}
+		}
 	}, 500);
 }
 
@@ -134,12 +203,14 @@ const preloadIframe2 = () => {
 };
 
 // Thêm phím tắt để skip (phím S)
-document.addEventListener("keydown", (e) => {
+const keydownHandler = (e) => {
 	if (e.key.toLowerCase() === "s" && skipButton && skipButton.style.display === "block") {
 		console.log("Skip shortcut pressed!");
 		skipToEnd();
 	}
-});
+};
+document.addEventListener("keydown", keydownHandler);
+eventListeners.push({ element: document, event: "keydown", handler: keydownHandler });
 
 function skipToEnd() {
 	// Nhảy thẳng đến cuối đường hầm
@@ -305,6 +376,74 @@ let isAnimating = true,
 	tunnelEndPoint,
 	renderFrameId,
 	hoverTime = 0;
+
+// Cleanup function for all resources
+function cleanupAll() {
+	// Cancel animation frame
+	if (renderFrameId) {
+		cancelAnimationFrame(renderFrameId);
+		renderFrameId = null;
+	}
+	isAnimating = false;
+	
+	// Remove all event listeners
+	eventListeners.forEach(({ element, event, handler }) => {
+		if (element && handler) {
+			element.removeEventListener(event, handler);
+		}
+	});
+	eventListeners.length = 0;
+	
+	// Cleanup Three.js resources
+	if (renderer) {
+		// Dispose geometries
+		if (geometry) geometry.dispose();
+		if (tube && tube.geometry) tube.geometry.dispose();
+		
+		// Dispose materials
+		if (material) material.dispose();
+		if (tube && tube.material) tube.material.dispose();
+		
+		// Dispose textures
+		scene.traverse((object) => {
+			if (object.material) {
+				if (Array.isArray(object.material)) {
+					object.material.forEach(mat => {
+						if (mat.map) mat.map.dispose();
+						mat.dispose();
+					});
+				} else {
+					if (object.material.map) object.material.map.dispose();
+					object.material.dispose();
+				}
+			}
+			if (object.geometry) object.geometry.dispose();
+		});
+		
+		// Clear scene
+		while (scene.children.length > 0) {
+			scene.remove(scene.children[0]);
+		}
+		
+		// Dispose renderer
+		renderer.dispose();
+		renderer = null;
+	}
+	
+	// Reset variables
+	scene = null;
+	camera = null;
+	tube = null;
+	geometry = null;
+	material = null;
+	lights = [];
+	path = null;
+	
+	// Cleanup card background
+	if (window.cardBgCleanup) {
+		window.cardBgCleanup();
+	}
+}
 var w = window.innerWidth,
 	h = window.innerHeight;
 	var cameraSpeed = 0.003, // Tăng tốc độ nhanh hơn
@@ -478,7 +617,7 @@ function initTunnel() {
 	camera = new THREE.PerspectiveCamera(60, w / h, 0.1, 1000);
 	const raycaster = new THREE.Raycaster(),
 		mouse = new THREE.Vector2();
-	canvasTunnel.addEventListener("click", function (event) {
+	const tunnelClickHandler = function (event) {
 		mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
 		mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 		raycaster.setFromCamera(mouse, camera);
@@ -492,7 +631,9 @@ function initTunnel() {
 				break;
 			}
 		}
-	});
+	};
+	canvasTunnel.addEventListener("click", tunnelClickHandler);
+	eventListeners.push({ element: canvasTunnel, event: "click", handler: tunnelClickHandler });
 	const starsCount = 5000; // Tăng từ 2000 lên 5000
 	const starsPositions = new Float32Array(starsCount * 3);
 	for (let i = 0; i < starsCount; i++) {
@@ -797,13 +938,19 @@ function initTunnel() {
 		additionalStarsMaterial
 	);
 	scene.add(additionalStarField);
-	window.onresize = function () {
+	const tunnelResizeHandler = function () {
 		w = window.innerWidth;
 		h = window.innerHeight;
-		camera.aspect = w / h;
-		camera.updateProjectionMatrix();
-		renderer.setSize(w, h);
+		if (camera) {
+			camera.aspect = w / h;
+			camera.updateProjectionMatrix();
+		}
+		if (renderer) {
+			renderer.setSize(w, h);
+		}
 	};
+	window.addEventListener("resize", tunnelResizeHandler);
+	eventListeners.push({ element: window, event: "resize", handler: tunnelResizeHandler });
 }
 function createCircleTexture() {
 	const canvas = document.createElement("canvas");
@@ -845,6 +992,10 @@ function render() {
 	}
 
 	// Continue through tunnel
+	if (!isAnimating || !scene || !camera || !renderer) {
+		return;
+	}
+
 	pct += cameraSpeed;
 	pct2 += lightSpeed;
 	if (pct2 >= 0.995) {
@@ -859,17 +1010,23 @@ function render() {
 
 	// Move lights with camera
 	const mainLight = lights[0];
-	mainLight.position.set(pt2.x, pt2.y, pt2.z);
+	if (mainLight) {
+		mainLight.position.set(pt2.x, pt2.y, pt2.z);
+	}
 
 	for (let i = 1; i < lights.length; i++) {
 		const offset = ((i * 13) % 17) / 20;
 		const lightPct = (pct2 + offset) % 0.995;
 		const pos = path.getPointAt(lightPct);
-		lights[i].position.set(pos.x, pos.y, pos.z);
+		if (lights[i]) {
+			lights[i].position.set(pos.x, pos.y, pos.z);
+		}
 	}
 
 	renderer.render(scene, camera);
-	renderFrameId = requestAnimationFrame(render);
+	if (isAnimating) {
+		renderFrameId = requestAnimationFrame(render);
+	}
 }
 function createCodeSnippetSprite(text) {
 	const canvas = document.createElement("canvas");

@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <!-- Preload iframe4 HTML để tải sớm -->
+    <link rel="preload" href="iframe/iframe4/index.html" as="document">
+    <link rel="prefetch" href="iframe/iframe4/index.html">
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script defer src="main.js"></script>
     <title>Viện Bảo Tàng Lịch Sử Kháng Chiến</title>
@@ -52,6 +55,8 @@
                 background: #666;
             }
         </style>
+        <!-- iframe4 được load sẵn nhưng ẩn, sẽ hiển thị khi vào portal -->
+        <iframe id="iframe4Background" src="iframe/iframe4/index.html" style="width: 100%; height: 100%; border: none; display: block; visibility: hidden;"></iframe>
         <script>
             // Sync scroll từ iframeContainer vào iframe4 để scroll magic hoạt động
             (function() {
@@ -96,5 +101,8 @@
             })();
         </script>
     </div>
+    
+    <!-- Hidden iframe để preload iframe4 -->
+    <iframe id="preloadIframe4" src="iframe/iframe4/index.html" style="position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; z-index: -1;" loading="eager"></iframe>
 </body>
 </html>

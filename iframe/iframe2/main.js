@@ -69,10 +69,48 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentIndex = 0;
     
     function openGallery(index) {
+        const isModalOpen = galleryModal.classList.contains('active');
         currentIndex = index;
         const data = imageData[index];
         const clickedItem = items[index];
         
+        // If modal is already open, just switch the image/content without animation
+        if (isModalOpen) {
+            // Set main image
+            const mainImg = galleryModal.querySelector('#galleryMainImg');
+            
+            // Load image first
+            const img = new Image();
+            img.onload = function() {
+                mainImg.src = data.imageUrl;
+                mainImg.style.display = 'block';
+                mainImg.style.margin = 'auto';
+            };
+            img.onerror = function() {
+                mainImg.src = data.imageUrl;
+            };
+            img.src = data.imageUrl;
+            
+            // Set context
+            const contextDiv = galleryModal.querySelector('#galleryContext');
+            contextDiv.innerHTML = data.content;
+            contextDiv.scrollTop = 0;
+            
+            // Update active sidebar image
+            const sidebarImages = galleryModal.querySelectorAll('.gallery-sidebar-image');
+            sidebarImages.forEach((img, i) => {
+                img.classList.toggle('active', i === index);
+            });
+            
+            // Scroll active image into view
+            if (sidebarImages[index]) {
+                sidebarImages[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            
+            return;
+        }
+        
+        // Original opening animation code (when modal is closed)
         // Get clicked item's position and size
         const itemRect = clickedItem.getBoundingClientRect();
         const itemCenterX = itemRect.left + itemRect.width / 2;
@@ -86,15 +124,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const translateX = viewportCenterX - itemCenterX;
         const translateY = viewportCenterY - itemCenterY;
         
-        // Get scale values
+        // Get scale values - using aspect-ratio 16:9
         const itemWidth = itemRect.width;
         const itemHeight = itemRect.height;
         const galleryLayout = galleryModal.querySelector('.gallery-layout');
-        const finalWidth = galleryLayout.offsetWidth || 1400;
-        const finalHeight = galleryLayout.offsetHeight || 900;
+        const finalWidth = galleryLayout.offsetWidth || 1600;
+        const finalHeight = finalWidth * (9 / 16); // Calculate height based on 16:9 aspect ratio
         const scaleX = itemWidth / finalWidth;
         const scaleY = itemHeight / finalHeight;
-        const initialScale = Math.max(scaleX, scaleY) * 0.8; // Slightly smaller for smooth transition
+        const initialScale = Math.max(scaleX, scaleY) * 0.75; // Slightly smaller for smooth transition
         
         // Set main image
         const mainImg = galleryModal.querySelector('#galleryMainImg');
@@ -139,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Initial state - positioned at clicked item (relative to viewport center)
         galleryLayoutEl.style.transform = `translate(${translateX}px, ${translateY}px) scale(${initialScale})`;
         galleryLayoutEl.style.opacity = '0';
-        overlay.style.opacity = '0';
+        // Overlay is always visible and clickable (transparent background)
         
         // Force reflow to ensure initial state is applied
         void galleryLayoutEl.offsetHeight;
@@ -149,8 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
             galleryLayoutEl.style.transition = 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease';
             galleryLayoutEl.style.transform = 'translate(0, 0) scale(1)';
             galleryLayoutEl.style.opacity = '1';
-            overlay.style.transition = 'opacity 0.4s ease';
-            overlay.style.opacity = '1';
+            // Overlay stays visible for click detection
         }, 10);
         
         // Scroll active image into view after animation
@@ -175,18 +212,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const translateX = itemCenterX - viewportCenterX;
         const translateY = itemCenterY - viewportCenterY;
         
-        const finalWidth = galleryLayout.offsetWidth || 1400;
-        const finalHeight = galleryLayout.offsetHeight || 900;
+        const finalWidth = galleryLayout.offsetWidth || 1600;
+        const finalHeight = finalWidth * (9 / 16); // Calculate height based on 16:9 aspect ratio
         const scaleX = itemRect.width / finalWidth;
         const scaleY = itemRect.height / finalHeight;
-        const finalScale = Math.max(scaleX, scaleY) * 0.8;
+        const finalScale = Math.max(scaleX, scaleY) * 0.75;
         
         // Animate back to item position
         galleryLayout.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease';
         galleryLayout.style.transform = `translate(${translateX}px, ${translateY}px) scale(${finalScale})`;
         galleryLayout.style.opacity = '0';
-        overlay.style.transition = 'opacity 0.3s ease';
-        overlay.style.opacity = '0';
+        // Overlay stays visible for click detection
         
         // Remove modal after animation
         setTimeout(() => {
@@ -202,39 +238,45 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 400);
     }
     
-    // Event listeners
+    // Store handlers for cleanup
+    const itemClickHandlers = [];
     items.forEach((item, index) => {
-        item.addEventListener('click', function(e) {
+        const handler = function(e) {
             e.preventDefault();
             e.stopPropagation();
             openGallery(index);
-        });
+        };
+        item.addEventListener('click', handler);
+        itemClickHandlers.push({ element: item, handler: handler });
     });
     
     // Close button
     const galleryCloseBtn = galleryModal.querySelector('.gallery-close');
-    galleryCloseBtn.addEventListener('click', function(e) {
+    const closeBtnHandler = function(e) {
         e.stopPropagation();
         closeGallery();
-    });
+    };
+    galleryCloseBtn.addEventListener('click', closeBtnHandler);
     
     // Close on overlay click (background đen)
     const overlay = galleryModal.querySelector('.gallery-overlay');
-    overlay.addEventListener('click', function(e) {
+    const overlayClickHandler = function(e) {
         e.stopPropagation();
         closeGallery();
-    });
+    };
+    overlay.addEventListener('click', overlayClickHandler);
     
     // Prevent closing when clicking inside gallery content
     const galleryLayout = galleryModal.querySelector('.gallery-layout');
+    const galleryLayoutClickHandler = function(e) {
+        e.stopPropagation();
+    };
     if (galleryLayout) {
-        galleryLayout.addEventListener('click', function(e) {
-            e.stopPropagation();
-        });
+        galleryLayout.addEventListener('click', galleryLayoutClickHandler);
     }
     
     // Keyboard navigation
-    document.addEventListener('keydown', function(e) {
+    const keydownHandler = function(e) {
         if (!galleryModal.classList.contains('active')) return;
         
         if (e.key === 'Escape') {
@@ -244,7 +286,8 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (e.key === 'ArrowRight' && currentIndex < imageData.length - 1) {
             openGallery(currentIndex + 1);
         }
-    });
+    };
+    document.addEventListener('keydown', keydownHandler);
     
     // Hide original content container by default and when gallery is open
     if (contentContainer) {
@@ -261,5 +304,81 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     observer.observe(galleryModal, { attributes: true, attributeFilter: ['class'] });
+    
+    // Cleanup function
+    window.iframe2Cleanup = function() {
+        // Disconnect observer
+        if (observer) {
+            observer.disconnect();
+        }
+        
+        // Remove item click listeners
+        itemClickHandlers.forEach(({ element, handler }) => {
+            if (element && handler) {
+                element.removeEventListener('click', handler);
+            }
+        });
+        
+        // Remove gallery modal listeners
+        if (galleryCloseBtn && closeBtnHandler) {
+            galleryCloseBtn.removeEventListener('click', closeBtnHandler);
+        }
+        
+        if (overlay && overlayClickHandler) {
+            overlay.removeEventListener('click', overlayClickHandler);
+        }
+        
+        if (galleryLayout && galleryLayoutClickHandler) {
+            galleryLayout.removeEventListener('click', galleryLayoutClickHandler);
+        }
+        
+        // Remove keyboard listener
+        if (keydownHandler) {
+            document.removeEventListener('keydown', keydownHandler);
+        }
+    };
 });
 
+(function ($) {
+    $.fn.timeline = function () {
+      var selectors = {
+        id: $(this),
+        item: $(this).find(".timeline-item"),
+        activeClass: "timeline-item--active",
+        img: ".timeline__img"
+      };
+      selectors.item.eq(0).addClass(selectors.activeClass);
+      selectors.id.css(
+        "background-image",
+        "url(" + selectors.item.first().find(selectors.img).attr("src") + ")"
+      );
+      var itemLength = selectors.item.length;
+      $(window).scroll(function () {
+        var max, min;
+        var pos = $(this).scrollTop();
+        selectors.item.each(function (i) {
+          min = $(this).offset().top;
+          max = $(this).height() + $(this).offset().top;
+          var that = $(this);
+          if (i == itemLength - 2 && pos > min + $(this).height() / 2) {
+            selectors.item.removeClass(selectors.activeClass);
+            selectors.id.css(
+              "background-image",
+              "url(" + selectors.item.last().find(selectors.img).attr("src") + ")"
+            );
+            selectors.item.last().addClass(selectors.activeClass);
+          } else if (pos <= max - 40 && pos >= min) {
+            selectors.id.css(
+              "background-image",
+              "url(" + $(this).find(selectors.img).attr("src") + ")"
+            );
+            selectors.item.removeClass(selectors.activeClass);
+            $(this).addClass(selectors.activeClass);
+          }
+        });
+      });
+    };
+  })(jQuery);
+  
+  $("#timeline-1").timeline();
+  
