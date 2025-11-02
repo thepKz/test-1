@@ -400,7 +400,7 @@ table {
     aspect-ratio: 16/9;
     top: 100px;
     left: 0%;
-    z-index: 10000;
+    z-index: 10000!important;
     border: none;
     /* Custom scrollbar - Modern Style */
     scrollbar-width: thin;
@@ -444,7 +444,7 @@ html{
 }
 
 .concept-two {
-    z-index: 99899999999999!important;
+    z-index: 10!important;
     display: flex;
 }
 
