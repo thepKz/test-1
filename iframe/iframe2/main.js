@@ -1,3 +1,39 @@
+// Variable to store current aspect ratio (16:9 or 9:16)
+// For calculation: finalHeight = finalWidth * ratio
+// If aspect-ratio is 16/9 (landscape), ratio = 9/16 (height is 9/16 of width)
+// If aspect-ratio is 9/16 (portrait), ratio = 16/9 (height is 16/9 of width)
+let currentAspectRatio = 9 / 16; // Default to landscape 16:9
+
+// Listen for messages from parent (iframe4) to change aspect ratio
+window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'changeAspectRatio') {
+        // If portrait mode (width < 1024), use 9/16 aspect ratio (height/width = 16/9 for calculation)
+        // If landscape mode (width >= 1024), use 16/9 aspect ratio (height/width = 9/16 for calculation)
+        currentAspectRatio = event.data.portrait ? 16 / 9 : 9 / 16;
+        updateGalleryAspectRatio(event.data.portrait);
+    }
+});
+
+// Update gallery aspect ratio in CSS
+function updateGalleryAspectRatio(isPortrait) {
+    const galleryLayout = document.querySelector('.gallery-layout');
+    if (galleryLayout) {
+        galleryLayout.style.aspectRatio = isPortrait ? '9/16' : '16/9';
+    }
+}
+
+// Check window width on load and resize
+function checkWindowWidth() {
+    const width = window.innerWidth;
+    const shouldBePortrait = width < 1024;
+    // If portrait, height/width ratio for calculation is 16/9, else 9/16
+    currentAspectRatio = shouldBePortrait ? 16 / 9 : 9 / 16;
+    updateGalleryAspectRatio(shouldBePortrait);
+}
+
+window.addEventListener('resize', checkWindowWidth);
+window.addEventListener('load', checkWindowWidth);
+
 // Gallery modal functionality - Facebook style
 document.addEventListener('DOMContentLoaded', function() {
     const items = document.querySelectorAll('.item');
@@ -140,12 +176,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const translateX = viewportCenterX - itemCenterX;
         const translateY = viewportCenterY - itemCenterY;
         
-        // Get scale values - using aspect-ratio 16:9
+        // Get scale values - using dynamic aspect ratio
         const itemWidth = itemRect.width;
         const itemHeight = itemRect.height;
         const galleryLayout = galleryModal.querySelector('.gallery-layout');
         const finalWidth = galleryLayout.offsetWidth || 1600;
-        const finalHeight = finalWidth * (9 / 16); // Calculate height based on 16:9 aspect ratio
+        const finalHeight = finalWidth * currentAspectRatio; // Calculate height based on current aspect ratio
         const scaleX = itemWidth / finalWidth;
         const scaleY = itemHeight / finalHeight;
         const initialScale = Math.max(scaleX, scaleY) * 0.75; // Slightly smaller for smooth transition
@@ -248,7 +284,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const translateY = itemCenterY - viewportCenterY;
         
         const finalWidth = galleryLayout.offsetWidth || 1600;
-        const finalHeight = finalWidth * (9 / 16); // Calculate height based on 16:9 aspect ratio
+        const finalHeight = finalWidth * currentAspectRatio; // Calculate height based on current aspect ratio
         const scaleX = itemRect.width / finalWidth;
         const scaleY = itemRect.height / finalHeight;
         const finalScale = Math.max(scaleX, scaleY) * 0.75;
@@ -352,6 +388,36 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     document.addEventListener('keydown', keydownHandler);
+    
+    // Close modal when window loses focus (user clicks outside, switches tabs, etc.)
+    const windowBlurHandler = function() {
+        if (galleryModal.classList.contains('active')) {
+            closeGallery();
+        }
+    };
+    window.addEventListener('blur', windowBlurHandler);
+    
+    // Also close when clicking outside the modal (on body/document) 
+    // Only if click is truly outside the modal (not handled by other handlers)
+    const documentClickHandler = function(e) {
+        if (galleryModal.classList.contains('active')) {
+            // Check if click is outside gallery modal entirely
+            // Only close if not clicking on overlay (already handled) or gallery content
+            const clickedElement = e.target;
+            const isClickOnModal = galleryModal.contains(clickedElement);
+            const isClickOnOverlay = clickedElement === overlay;
+            const isClickOnGalleryLayout = galleryLayout && galleryLayout.contains(clickedElement);
+            
+            // Close if clicking completely outside modal, but not if clicking on overlay/gallery (already handled)
+            if (!isClickOnModal && !isClickOnOverlay && !isClickOnGalleryLayout) {
+                closeGallery();
+            }
+        }
+    };
+    // Use capture phase to catch clicks outside modal, but with slight delay to avoid conflicts
+    setTimeout(() => {
+        document.addEventListener('click', documentClickHandler, true);
+    }, 100);
     
     // Hide original content container by default and when gallery is open
     if (contentContainer) {
@@ -482,6 +548,16 @@ document.addEventListener('DOMContentLoaded', function() {
         // Remove keyboard listener
         if (keydownHandler) {
             document.removeEventListener('keydown', keydownHandler);
+        }
+        
+        // Remove window blur listener
+        if (windowBlurHandler) {
+            window.removeEventListener('blur', windowBlurHandler);
+        }
+        
+        // Remove document click listener
+        if (documentClickHandler) {
+            document.removeEventListener('click', documentClickHandler, true);
         }
     };
 });

@@ -33,8 +33,45 @@ function scrollHandler() {
 
 window.addEventListener('scroll', scrollHandler)
 
+// Check iframe2 width and adjust aspect ratio
+function checkIframe2Width() {
+  const iframe2 = document.getElementById('iframe2')
+  if (!iframe2) return
+  
+  const iframe2Width = iframe2.offsetWidth || iframe2.clientWidth
+  const isPortrait = iframe2Width < 1024
+  
+  // Send message to iframe2 to change aspect ratio
+  try {
+    iframe2.contentWindow.postMessage({
+      type: 'changeAspectRatio',
+      portrait: isPortrait
+    }, '*')
+  } catch (e) {
+    // Cross-origin or iframe not loaded yet
+    console.log('Could not send message to iframe2:', e)
+  }
+  
+  // Also update CSS directly on iframe2 element
+  if (isPortrait) {
+    iframe2.style.aspectRatio = '9/16'
+  } else {
+    iframe2.style.aspectRatio = '16/9'
+  }
+}
+
+// Check on load and resize
+window.addEventListener('load', checkIframe2Width)
+window.addEventListener('resize', checkIframe2Width)
+
+// Also check after a short delay to ensure iframe2 is loaded
+setTimeout(checkIframe2Width, 500)
+setTimeout(checkIframe2Width, 1000)
+
 // Cleanup function
 window.iframe4Cleanup = function() {
   window.removeEventListener('scroll', scrollHandler)
+  window.removeEventListener('load', checkIframe2Width)
+  window.removeEventListener('resize', checkIframe2Width)
 }
 
