@@ -10,7 +10,13 @@ const path1Length = path1.getTotalLength()
 // const path2Length = path2.getTotalLength()
 // const path3Length = path3.getTotalLength()
 path1.style.strokeDasharray  = path1Length
-path1.style.strokeDashoffset = calcDashoffset(window.innerHeight * 0.8, content1, path1Length)
+
+// Make the path progress lead ahead of scroll (adjust 0.2 as needed)
+function getPathLeadPx() {
+  return window.innerHeight * 0.2
+}
+
+path1.style.strokeDashoffset = calcDashoffset(window.innerHeight * 0.8 + getPathLeadPx(), content1, path1Length)
 
 // path2.style.strokeDasharray  = path2Length
 // path2.style.strokeDashoffset = path2Length
@@ -26,7 +32,7 @@ function calcDashoffset(scrollY, element, length) {
 
 function scrollHandler() {
   const scrollY = window.scrollY + (window.innerHeight * 0.8)
-  path1.style.strokeDashoffset = calcDashoffset(scrollY, content1, path1Length)
+  path1.style.strokeDashoffset = calcDashoffset(scrollY + getPathLeadPx(), content1, path1Length)
   // path2.style.strokeDashoffset = calcDashoffset(scrollY, content2, path2Length)
   // path3.style.strokeDashoffset = calcDashoffset(scrollY, content3, path3Length)
 }
