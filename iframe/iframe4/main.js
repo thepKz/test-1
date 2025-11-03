@@ -13,7 +13,7 @@ path1.style.strokeDasharray  = path1Length
 
 // Make the path progress lead ahead of scroll (adjust 0.2 as needed)
 function getPathLeadPx() {
-  return window.innerHeight * 0.2
+  return window.innerHeight * 0.35
 }
 
 path1.style.strokeDashoffset = calcDashoffset(window.innerHeight * 0.8 + getPathLeadPx(), content1, path1Length)
